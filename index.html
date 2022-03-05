@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aprendendo IndexedDB</title>
+</head>
+
+<body>
+
+    <div>
+        <label for="username"></label>
+        <input type="text" id="username" name="username"><br><br>
+        <label for="password"></label>
+        <input type="password" id="password" name="password"><br><br>
+        <input type="checkbox" id="checar" name="checar">
+        <label for="checar">Salvar Dados</label><br><br>
+        <button onclick="populaCampos()">Adicionar</button>
+    </div>
+
+    <script>
+
+        // variável que receberá a conexão.
+        var conexao;
+
+        // instrução com os dados à serem criados.
+        var openRequest = window.indexedDB.open('banco', 3);
+
+        // Será executado para criar ou alterar um banco de dados já existente.
+        openRequest.onupgradeneeded = e => {
+            console.log('Cria ou altera um banco já existente.');
+
+            // obtem os dados do db para utilizar
+            conexao = e.target.result;
+
+            // cria a "tabela e define o index (PK)"
+            var banco = conexao.createObjectStore('login', { keyPath: 'id' });
+
+            // cria os "campos"
+            banco.createIndex('user', 'user', { unique: true });
+            banco.createIndex('password', 'password', { unique: false });
+        }
+
+        // será executado quando conseguirmos obter uma conexão.
+        openRequest.onsuccess = e => {
+            console.log('Conexão obtida com sucesso.');
+            // obtem o resultado da conexão - informações do IDBDatabase
+            conexao = e.target.result;
+            console.log(e.target.result);
+
+            // chama a função populaCampos para inserir valores
+            //populaCampos();
+        }
+
+        // será executado se tivermos algum tipo de problema ao tentarmos nos conectar com o banco.
+        openRequest.onerror = e => {
+            console.log(e.target.error);
+        }
+
+        function populaCampos() {
+
+            // objeto contendo os usuários à serem gravados.
+            let usuarios = [
+                /* { id: 1, user: 'thiago.abreu', password: 'abreu' },
+                 { id: 2, user: 'aline.marchi', password: 'marchi' }*/
+            ];
+
+            // obtendo valores do fromulário
+            let usuario = document.getElementsByName('username');
+            let senha = document.getElementsByName('password');
+            let checar = document.getElementsByName('checar');
+
+            //validando se o check está marcado, caso sim, adiciona o usuário no array
+            if (checar[0].checked) {
+                usuarios.push({ id: 1, user: usuario[0].value, password: senha[0].value });
+
+                // permite as transações no objeto login, permitindo leitura e escrita
+                var transacao = conexao.transaction(['login'], 'readwrite');
+
+                // abre o objeto login para adicionar os valores
+                var objectStore = transacao.objectStore('login');
+
+                // adiciona valor no objeto
+                for (i = 0; i < usuarios.length; i++) {
+                    var request = objectStore.put(usuarios[i]);
+                };
+
+                // após finalizar a transação, executa o console
+                transacao.oncomplete = function () {
+                    console.log('Adicionado os itens.');
+                };
+            }
+        }
+
+
+    </script>
+</body>
+
+</html>
