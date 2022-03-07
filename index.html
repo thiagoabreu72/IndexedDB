@@ -45,10 +45,13 @@
 
         // será executado quando conseguirmos obter uma conexão.
         openRequest.onsuccess = e => {
-            console.log('Conexão obtida com sucesso.');
+
             // obtem o resultado da conexão - informações do IDBDatabase
             conexao = e.target.result;
-            console.log(e.target.result);
+
+            // Verifica se já tem usuário cadastrado
+            recuperaUsuario();
+            console.log('Conexão obtida com sucesso.');
 
             // chama a função populaCampos para inserir valores
             //populaCampos();
@@ -58,6 +61,8 @@
         openRequest.onerror = e => {
             console.log(e.target.error);
         }
+
+
 
         function populaCampos() {
 
@@ -91,6 +96,32 @@
                 transacao.oncomplete = function () {
                     console.log('Adicionado os itens.');
                 };
+            }
+        }
+
+        async function recuperaUsuario() {
+
+            // Obtem todos os elementos que serão utilizados na tela de login
+            let usuario = document.getElementById('username');
+            let senha = document.getElementById('password');
+            let checar = document.getElementById('checar');
+
+            // Utiliza a conexão com o "banco" e cria a transação no objeto login com permissão de consulta
+            var transacao = conexao.transaction('login', 'readonly');
+            // obtem os dados armazenados no objeto login
+            var objeto = transacao.objectStore('login');
+            // informa qual indíce será utilizado na consulta
+            var indice = objeto.index("user");
+
+            // abre um cursor pra percorrer os valores do objeto
+            indice.openCursor().onsuccess = function (event) {
+                var cursor = event.target.result;
+                if (cursor) {
+                    usuario.value = cursor.value.user;
+                    senha.value = cursor.value.password;
+                    checar.checked = true;
+                    cursor.continue();
+                }
             }
         }
 

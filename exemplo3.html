@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <script>
+        var request = indexedDB.open("MeuBanco", 1);
+
+        request.onupgradeneeded = function (event) {
+            var db = event.target.result;
+
+            //Object store sem key path e sem key generator
+            //Nesse exemplo vc deve informar a chave ao incluir um objeto
+            var store1 = db.createObjectStore("store1");
+            store1.add({ campo: 'Valor 1' }, 1); //1 = chave do objeto
+            store1.add({ campo: 'Valor 2' }, 2); //2 = chave do objeto
+
+            //Object store com key path
+            //Nesse exemplo o campo definido como chave deve possuir um valor e deve ser único
+            var store2 = db.createObjectStore("store2", { keyPath: "minhaChave" });
+            store2.add({ minhaChave: 'Chave1', campo: 'Valor 1' });
+            store2.add({ minhaChave: 'Chave2', campo: 'Valor 2' });
+
+            //Object store com key generator
+            //Nesse exemplo uma chave será criada automaticamente ao incluir um objeto
+            var store3 = db.createObjectStore("store3", { autoIncrement: true });
+            store3.add({ campo: 'Valor 1' });
+            store3.add({ campo: 'Valor 2' });
+
+            //Object store com key path e key generator
+            //Nesse exemplo uma chave será criada automaticamente no campo "minhaChave" ao incluir um 
+            //novo objeto
+            var store4 = db.createObjectStore("store4", { keyPath: "minhaChave", autoIncrement: true });
+            store4.add({ campo: 'Valor 1' });
+            store4.add({ campo: 'Valor 2' });
+        }
+
+        request.onupgradeneeded = function (event) {
+            var db = event.target.result;
+
+            var storeContato = db.createObjectStore("contato", { keyPath: "id", autoIncrement: true });
+
+            //cria um index por cpf e define que não poderá ter cpf duplicado no banco de dados
+            storeContato.createIndex("cpf", "cpf", { unique: true });
+            //cria um index por nome e permite nomes duplicados no banco de dados
+            storeContato.createIndex("nome", "nome", { unique: false });
+        }
+
+
+    </script>
+
+</body>
+
+</html>
